@@ -8,6 +8,7 @@ import com.mrsonmez.bookcatalog.models.Book;
 import com.mrsonmez.bookcatalog.models.CatalogItem;
 import com.mrsonmez.bookcatalog.models.Rating;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 
 @Service
 public class BookInfo {
@@ -15,7 +16,13 @@ public class BookInfo {
 	@Autowired
 	public RestTemplate restTemplate;
 	
-	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem")
+	@HystrixCommand(fallbackMethod = "getFallbackCatalogItem",
+			threadPoolKey = "bookInfoPool",
+			threadPoolProperties = 
+			{
+					@HystrixProperty(name = "coreSize", value = "20"),
+					@HystrixProperty(name = "maxQueueSize", value = "10")
+			})
 	public CatalogItem getCatalogItem(Rating rating)
 	{
 		Book book = restTemplate.getForObject("http://book-info-service/books/" + rating.getBookId(), Book.class);
